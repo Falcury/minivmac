@@ -1,0 +1,9 @@
+# Build products
+Makefile
+*.exe
+tool
+bld/
+
+# CMake and IDE (CLion) related files
+src/.idea/
+cmake*/
