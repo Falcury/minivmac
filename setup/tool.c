@@ -154,6 +154,8 @@ int main(int argc, char *argv[])
 	tMyErr err;
 	int return_code = 1;
 
+	Output = stdout;
+
 	BeginParseCommandLineArguments(argc, argv);
 
 	err = DoTheCommand();

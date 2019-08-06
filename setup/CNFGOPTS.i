@@ -41,6 +41,7 @@
 
 /* choices for gbo_script */
 
+#define gbk_script_none 0
 #define gbk_script_mpw 1
 #define gbk_script_applescript 2
 #define gbk_script_bash 3

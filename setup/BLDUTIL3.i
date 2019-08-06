@@ -18,11 +18,6 @@
 */
 
 
-#define src_d_name "src"
-#define cfg_d_name "cfg"
-
-#define obj_d_name "bld"
-	/* not "obj", so as to work in freebsd make */
 
 LOCALVAR blnr HaveAltSrc;
 

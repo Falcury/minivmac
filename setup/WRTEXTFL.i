@@ -21,47 +21,65 @@
 
 /* --- routines for writing text files --- */
 
+#if (gbo_script == gbk_script_none)
+#include <sys/stat.h> /* for mkdir() */
 
-#define WriteCharToOutput putchar
+LOCALPROC MakeDirectory(char* name)
+{
+#if defined(_WIN32)
+	mkdir(name);
+#else
+	mkdir(name, 0777);
+#endif
+}
+
+#endif
+
+LOCALVAR FILE* Output;
+
+LOCALPROC WriteCharToOutput(int c)
+{
+	fputc(c, Output);
+}
 
 LOCALPROC WriteCStrToOutput(char *s)
 {
-	printf("%s", s);
+	fprintf(Output, "%s", s);
 }
 
 LOCALPROC WriteSignedLongToOutput(long int v)
 {
-	printf("%ld", v);
+	fprintf(Output, "%ld", v);
 }
 
 LOCALPROC WriteUnsignedToOutput(unsigned int v)
 {
-	printf("%u", v);
+	fprintf(Output, "%u", v);
 }
 
 LOCALPROC WriteDec2CharToOutput(int v)
 {
-	printf("%02u", v);
+	fprintf(Output, "%02u", v);
 }
 
 LOCALPROC WriteHexByteToOutput(unsigned int v)
 {
-	printf("%02X", v);
+	fprintf(Output, "%02X", v);
 }
 
 LOCALPROC WriteHexWordToOutput(unsigned int v)
 {
-	printf("%04X", v);
+	fprintf(Output, "%04X", v);
 }
 
 LOCALPROC WriteHexLongToOutput(ui5r v)
 {
-	printf("%08lX", v);
+	fprintf(Output, "%08lX", v);
 }
 
 LOCALPROC WriteEolToOutput(void)
 {
-	printf("\n");
+	fprintf(Output, "\n");
 }
 
 LOCALPROC WriteLnCStrToOutput(char *s)
@@ -149,9 +167,11 @@ GLOBALPROC WriteSectionCommentDestFile(char * Description)
 LOCALPROC WriteOpenDestFile(char *DirVar, char *FileName, char *FileExt,
 	char * Description)
 {
+#if gbo_script != gbk_script_none
 	WriteSectionCommentDestFile(Description);
 
 	WriteEolToOutput();
+#endif
 
 #if (gbo_script == gbk_script_mpw)
 	{
@@ -257,16 +277,45 @@ LOCALPROC WriteCloseDestFile(void)
 
 TYPEDEFPROC (*MyProc)(void);
 
+#define src_d_name "src"
+#define cfg_d_name "cfg"
+#define obj_d_name "bld"
+/* not "obj", so as to work in freebsd make */
+
 LOCALPROC WriteADstFile1(char *DirVar,
 	char *FileName, char *FileExt, char * Description, MyProc p)
 {
+#if gbo_script == gbk_script_none
+	char* DirectoryName = ".";
+	if (strcmp(DirVar, "my_config_d") == 0) {
+		DirectoryName = cfg_d_name;
+	} else if (strcmp(DirVar, "my_obj_d") == 0) {
+		DirectoryName = obj_d_name;
+	} else if (strcmp(DirVar, "my_source_d") == 0) {
+		DirectoryName = src_d_name;
+	}
+	char FullFileName[4096];
+	snprintf(FullFileName, sizeof(FullFileName), "%s/%s%s", DirectoryName, FileName, FileExt);
+	Output = fopen(FullFileName, "wb");
+#else
+	Output = stdout;
+#endif
+
 	WriteOpenDestFile(DirVar, FileName, FileExt, Description);
 	p();
 	WriteCloseDestFile();
+
+#if gbo_script == gbk_script_none
+	fclose(Output);
+	Output = stdout;
+#endif
 }
 
 LOCALPROC WriteBlankLineToDestFile(void)
 {
+#if (gbo_script == gbk_script_none)
+	WriteEolToOutput();
+#endif
 #if (gbo_script == gbk_script_mpw)
 #if MPWOneEchoPerFile
 	WriteLnCStrToOutput("''\266n\266");
@@ -607,7 +656,9 @@ LOCALPROC MakeSubDirectory(char *new_d, char *parent_d, char *name,
 	char *FileExt)
 {
 	WriteEolToOutput();
-
+#if (gbo_script == gbk_script_none)
+	MakeDirectory(name);
+#endif
 #if (gbo_script == gbk_script_mpw)
 	WriteCStrToOutput("Set ");
 	WriteCStrToOutput(new_d);
